@@ -17,7 +17,7 @@ export function buildMaterialList(layout) {
     if (stone.clipped && stone.cutW != null && stone.cutH != null) {
       rawCutNotes.push({
         orderSize: key,
-        cutDesc: `${stone.cutW}" × ${stone.cutH}" (${formatIn(stone.cutW)} × ${formatIn(stone.cutH)})`,
+        cutDesc: `${formatIn(stone.cutW)} × ${formatIn(stone.cutH)}`,
         qty: 1,
       });
     }

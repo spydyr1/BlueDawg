@@ -32,7 +32,8 @@ test('buildMaterialList: cut stones appear in cut notes', () => {
   const list = buildMaterialList(layout);
   assert.equal(list.cutNotes.length, 1);
   assert.equal(list.cutNotes[0].orderSize, '24x36');
-  assert.ok(list.cutNotes[0].cutDesc.includes('20'));
+  // cutW=20" → formatIn(20) = "1' 8\"", cutH=36" → formatIn(36) = "3' 0\""
+  assert.ok(list.cutNotes[0].cutDesc.includes("1' 8"));
 });
 
 test('buildMaterialList: total sqft correct', () => {

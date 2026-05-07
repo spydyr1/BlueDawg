@@ -217,6 +217,7 @@ export class Renderer {
     ctx.setLineDash([]);
     ctx.restore();
 
+    ctx.save();
     const midX = stone.clipPath.reduce((s, p) => s + p.x, 0) / stone.clipPath.length;
     const midY = stone.clipPath.reduce((s, p) => s + p.y, 0) / stone.clipPath.length;
     const cm = this.toCanvas(midX, midY);
@@ -224,7 +225,7 @@ export class Renderer {
     ctx.font = `${Math.max(8, this.scale * 1.5)}px system-ui`;
     ctx.textAlign = 'center';
     ctx.fillText('cut', cm.x, cm.y);
-    ctx.textAlign = 'left';
+    ctx.restore();
   }
 }
 
