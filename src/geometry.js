@@ -89,10 +89,12 @@ function _intersect(a, b, c, d) {
 // where p1/p2 are the tangent points replacing the corner vertex.
 export function filletCorner(prev, corner, next, radius) {
   const d1 = dist(prev, corner), d2 = dist(corner, next);
+  if (d1 < 0.01 || d2 < 0.01) return null; // duplicate/coincident vertex
   const u1 = { x: (prev.x - corner.x) / d1, y: (prev.y - corner.y) / d1 };
   const u2 = { x: (next.x - corner.x) / d2, y: (next.y - corner.y) / d2 };
   const dot = u1.x * u2.x + u1.y * u2.y;
   const angle = Math.acos(Math.max(-1, Math.min(1, dot)));
+  if (angle < 0.01 || Math.PI - angle < 0.01) return null; // collinear vertices
   const t = radius / Math.tan(angle / 2);
   const p1 = { x: corner.x + u1.x * t, y: corner.y + u1.y * t };
   const p2 = { x: corner.x + u2.x * t, y: corner.y + u2.y * t };

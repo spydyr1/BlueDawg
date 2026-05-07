@@ -121,12 +121,20 @@ export function checkSeamLength(placed, candidate, maxLen = MAX_SEAM) {
     if (atSeam.length < 2) continue;
 
     const intervals = atSeam.map(s => [s.x, s.x + s.w]).sort((a, b) => a[0] - b[0]);
-    let coverage = 0, curEnd = -Infinity;
-    for (const [a, b] of intervals) {
-      if (a > curEnd) { coverage += b - a; curEnd = b; }
-      else { coverage += Math.max(0, b - curEnd); curEnd = Math.max(curEnd, b); }
+    // Merge touching/overlapping intervals; check the longest single contiguous run.
+    // Two intervals are contiguous if separated by ≤ one joint gap.
+    let maxRun = 0, segStart = intervals[0][0], segEnd = intervals[0][1];
+    for (let i = 1; i < intervals.length; i++) {
+      const [a, b] = intervals[i];
+      if (a > segEnd + JOINT + 0.1) {
+        maxRun = Math.max(maxRun, segEnd - segStart);
+        segStart = a; segEnd = b;
+      } else {
+        segEnd = Math.max(segEnd, b);
+      }
     }
-    if (coverage > maxLen + 0.01) return false;
+    maxRun = Math.max(maxRun, segEnd - segStart);
+    if (maxRun > maxLen + 0.01) return false;
   }
   return true;
 }
@@ -296,7 +304,7 @@ export function generateLayout(polygon, pattern) {
     return _generateBondV(polygon);
   }
   if (pattern === 'bond-h') {
-    return _generateBond(polygon, false);
+    return _generateBond(polygon);
   }
   return _generateRandom(polygon);
 }
@@ -336,7 +344,7 @@ function _generateRandom(polygon) {
   return { stones, counts, totalCount };
 }
 
-function _generateBond(polygon, vertical) {
+function _generateBond(polygon) {
   const { vertices } = polygon;
   const { minX, maxX, minY, maxY } = _bbox(vertices);
 
@@ -377,7 +385,7 @@ function _generateBondV(polygon) {
     vertices: polygon.vertices.map(v => ({ x: v.y, y: v.x })).reverse(),
   };
 
-  const layout = _generateBond(transposed, true);
+  const layout = _generateBond(transposed);
 
   layout.stones = layout.stones.map(s => ({
     x: s.y, y: s.x, w: s.h, h: s.w,

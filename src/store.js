@@ -6,7 +6,11 @@ function loadAll() {
 }
 
 function saveAll(projects) {
-  localStorage.setItem(KEY, JSON.stringify(projects));
+  try {
+    localStorage.setItem(KEY, JSON.stringify(projects));
+  } catch {
+    alert('Storage is full. Please delete some old projects to free space.');
+  }
 }
 
 function newProject() {
@@ -78,9 +82,14 @@ export const store = {
   importJSON(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
+      reader.onerror = () => reject(new Error('File read error'));
       reader.onload = e => {
         try {
           const project = JSON.parse(e.target.result);
+          if (!project || typeof project.name !== 'string' ||
+              !project.polygon?.vertices) {
+            reject(new Error('Not a valid BlueDawg project file')); return;
+          }
           project.id = crypto.randomUUID();
           project.name = project.name + ' (imported)';
           project.updatedAt = Date.now();

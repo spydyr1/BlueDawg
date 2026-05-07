@@ -31,7 +31,7 @@ let _listenersAttached = false;
 
 export function initEditor(proj) {
   project = proj;
-  renderer = new Renderer(canvas);
+  if (!renderer) renderer = new Renderer(canvas);
   tool = 'draw';
   drawing = false;
   rubberPt = null;

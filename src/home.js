@@ -71,8 +71,12 @@ export function renderHome(onOpen) {
       const input = document.createElement('input');
       input.type = 'file'; input.accept = '.json';
       input.onchange = async e => {
-        await store.importJSON(e.target.files[0]);
-        renderHome(onOpen);
+        try {
+          await store.importJSON(e.target.files[0]);
+          renderHome(onOpen);
+        } catch (err) {
+          alert(`Import failed: ${err.message}`);
+        }
       };
       input.click();
     });

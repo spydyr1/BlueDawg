@@ -114,10 +114,9 @@ export class Renderer {
       const next = vertices[(i + 1) % n];
       const radius = fillets[i];
 
-      if (radius && closed) {
-        const arc = filletCorner(prev, cur, next, radius);
+      const arc = (radius && closed) ? filletCorner(prev, cur, next, radius) : null;
+      if (arc) {
         const p1c = this.toCanvas(arc.p1.x, arc.p1.y);
-        const p2c = this.toCanvas(arc.p2.x, arc.p2.y);
         const cc = this.toCanvas(arc.center.x, arc.center.y);
         if (!started) { ctx.moveTo(p1c.x, p1c.y); started = true; }
         else ctx.lineTo(p1c.x, p1c.y);
