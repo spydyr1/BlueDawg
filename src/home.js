@@ -1,6 +1,5 @@
 // src/home.js
 import { store } from './store.js';
-import { formatIn } from './imperial.js';
 import { polygonArea } from './geometry.js';
 
 export function renderHome(onOpen) {
@@ -21,25 +20,40 @@ export function renderHome(onOpen) {
 
     const card = document.createElement('div');
     card.className = 'project-card';
-    card.innerHTML = `
-      <div class="project-card-info">
-        <div class="project-card-name">${p.name}</div>
-        <div class="project-card-meta">${area} · ${date}</div>
-      </div>
-      <div class="project-card-actions">
-        <button class="btn-ghost btn-dup" data-id="${p.id}">Duplicate</button>
-        <button class="btn-ghost btn-del" data-id="${p.id}" style="color:#e74c3c;border-color:#e74c3c">Delete</button>
-      </div>
-    `;
+
+    const info = document.createElement('div');
+    info.className = 'project-card-info';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'project-card-name';
+    nameEl.textContent = p.name;
+    const metaEl = document.createElement('div');
+    metaEl.className = 'project-card-meta';
+    metaEl.textContent = `${area} · ${date}`;
+    info.append(nameEl, metaEl);
+
+    const actions = document.createElement('div');
+    actions.className = 'project-card-actions';
+    const dupBtn = document.createElement('button');
+    dupBtn.className = 'btn-ghost btn-dup';
+    dupBtn.dataset.id = p.id;
+    dupBtn.textContent = 'Duplicate';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-ghost btn-del';
+    delBtn.dataset.id = p.id;
+    delBtn.style.cssText = 'color:#e74c3c;border-color:#e74c3c';
+    delBtn.textContent = 'Delete';
+    actions.append(dupBtn, delBtn);
+
+    card.append(info, actions);
     card.addEventListener('click', e => {
       if (!e.target.closest('.project-card-actions')) onOpen(p.id);
     });
-    card.querySelector('.btn-dup').addEventListener('click', e => {
+    dupBtn.addEventListener('click', e => {
       e.stopPropagation();
       store.duplicate(p.id);
       renderHome(onOpen);
     });
-    card.querySelector('.btn-del').addEventListener('click', e => {
+    delBtn.addEventListener('click', e => {
       e.stopPropagation();
       if (confirm(`Delete "${p.name}"?`)) { store.delete(p.id); renderHome(onOpen); }
     });
