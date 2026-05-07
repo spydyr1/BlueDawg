@@ -120,9 +120,13 @@ export function checkSeamLength(placed, candidate, maxLen = MAX_SEAM) {
     );
     if (atSeam.length < 2) continue;
 
-    const minX = Math.min(...atSeam.map(s => s.x));
-    const maxX = Math.max(...atSeam.map(s => s.x + s.w));
-    if (maxX - minX > maxLen + 0.01) return false;
+    const intervals = atSeam.map(s => [s.x, s.x + s.w]).sort((a, b) => a[0] - b[0]);
+    let coverage = 0, curEnd = -Infinity;
+    for (const [a, b] of intervals) {
+      if (a > curEnd) { coverage += b - a; curEnd = b; }
+      else { coverage += Math.max(0, b - curEnd); curEnd = Math.max(curEnd, b); }
+    }
+    if (coverage > maxLen + 0.01) return false;
   }
   return true;
 }
@@ -221,6 +225,9 @@ function isValidPlacement(placed, candidate, counts, totalCount, lastKey) {
 
   // Rule: no seam > 5 feet
   if (!checkSeamLength(placed, candidate)) return false;
+
+  // Rule: no continuous vertical seam through more than 2 consecutive rows
+  if (!checkContinuousSeam(placed, candidate)) return false;
 
   return true;
 }
@@ -347,8 +354,8 @@ function _generateBond(polygon, vertical) {
     const rowH = hOptions[Math.floor(Math.random() * hOptions.length)];
     prevRowH = rowH;
 
-    // Running bond: offset every other row by half the row height
-    const offset = rowIndex % 2 === 0 ? 0 : rowH / 2;
+    // Running bond: offset every other row by a fixed 9" (half of 18" nominal stone length)
+    const offset = rowIndex % 2 === 0 ? 0 : 9; // 9" = standard bond offset (half of 18" nominal)
 
     totalCount = fillRow(
       y, rowH, minX - offset, maxX,
