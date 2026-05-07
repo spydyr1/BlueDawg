@@ -26,6 +26,9 @@ const statusPerim = document.getElementById('status-perim');
 const statusHint = document.getElementById('status-hint');
 const resultsPanel = document.getElementById('results-panel');
 
+// Canvas and fillet listeners are attached once at module load (canvas never changes)
+let _listenersAttached = false;
+
 export function initEditor(proj) {
   project = proj;
   renderer = new Renderer(canvas);
@@ -74,14 +77,16 @@ export function initEditor(proj) {
   document.getElementById('btn-print').onclick = () =>
     import('./print.js').then(m => m.printLayout(project, renderer));
 
-  canvas.addEventListener('mousedown', onMouseDown);
-  canvas.addEventListener('mousemove', onMouseMove);
-  canvas.addEventListener('mouseup', onMouseUp);
-  canvas.addEventListener('dblclick', onDblClick);
-
-  document.getElementById('fillet-confirm').onclick = applyFillet;
-  document.getElementById('fillet-remove').onclick = removeFillet;
-  filletInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyFillet(); });
+  if (!_listenersAttached) {
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('dblclick', onDblClick);
+    document.getElementById('fillet-confirm').onclick = applyFillet;
+    document.getElementById('fillet-remove').onclick = removeFillet;
+    filletInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyFillet(); });
+    _listenersAttached = true;
+  }
 
   if (project.layout) {
     showResults();
