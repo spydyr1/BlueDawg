@@ -1,0 +1,54 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #1a1a2e; }
+.hidden { display: none !important; }
+.screen { height: 100vh; display: flex; flex-direction: column; }
+.app-header { display: flex; align-items: center; gap: 12px; padding: 8px 16px;
+  background: #1a1a2e; color: white; }
+.app-header h1 { font-size: 18px; font-weight: 700; color: #7faaff; }
+.btn-primary { background: #4a6fa5; color: white; border: none; padding: 6px 14px;
+  border-radius: 6px; cursor: pointer; font-size: 13px; }
+.btn-ghost { background: transparent; color: #7faaff; border: 1px solid #4a6fa5;
+  padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.unit-toggle { display: flex; border: 1.5px solid #4a6fa5; border-radius: 6px;
+  overflow: hidden; margin-left: auto; }
+.unit-btn { background: transparent; color: #7faaff; border: none; padding: 4px 10px;
+  cursor: pointer; font-size: 12px; font-weight: 600; }
+.unit-btn.active { background: #4a6fa5; color: white; }
+.project-name-input { background: transparent; border: none; border-bottom: 1px solid #4a6fa5;
+  color: white; font-size: 15px; font-weight: 600; outline: none; width: 200px; }
+#toolbar { display: flex; gap: 6px; padding: 6px 12px; background: #2c3e50; }
+.tool-btn { background: transparent; color: #aaa; border: 1px solid #3d5166;
+  padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.tool-btn.active { background: #4a6fa5; color: white; border-color: #4a6fa5; }
+#main-canvas { flex: 1; display: block; background: #1a1a2e; cursor: crosshair; }
+#status-bar { display: flex; gap: 16px; padding: 4px 12px; background: #2c3e50;
+  font-size: 11px; color: #7faaff; }
+#pattern-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  background: #f0f0f0; border-top: 1px solid #ddd; }
+.pattern-btn { background: white; border: 1px solid #ccc; padding: 4px 10px;
+  border-radius: 4px; cursor: pointer; font-size: 12px; }
+.pattern-btn.active { background: #4a6fa5; color: white; border-color: #4a6fa5; }
+#results-panel { background: #1e2a38; color: #e8edf2; padding: 12px 16px;
+  max-height: 280px; overflow-y: auto; }
+#results-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+#dim-input-overlay { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+  background: #2c3e50; border: 1px solid #4a6fa5; border-radius: 8px;
+  padding: 8px 12px; display: flex; align-items: center; gap: 8px; z-index: 100; }
+#dim-input { background: transparent; border: none; color: white; font-size: 15px;
+  width: 160px; outline: none; }
+#dim-input-hint { color: #7faaff; font-size: 11px; }
+#fillet-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  background: #2c3e50; border: 1px solid #4a6fa5; border-radius: 8px;
+  padding: 16px; display: flex; flex-direction: column; gap: 10px; z-index: 100;
+  color: white; }
+#fillet-input { background: #1a1a2e; border: 1px solid #4a6fa5; color: white;
+  padding: 6px 8px; border-radius: 4px; font-size: 14px; }
+#project-list { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.project-card { background: white; border: 1px solid #ddd; border-radius: 8px;
+  padding: 12px 16px; display: flex; align-items: center; gap: 12px;
+  cursor: pointer; }
+.project-card:hover { border-color: #4a6fa5; }
+.project-card-info { flex: 1; }
+.project-card-name { font-weight: 600; font-size: 14px; }
+.project-card-meta { font-size: 12px; color: #888; margin-top: 2px; }
+.project-card-actions { display: flex; gap: 6px; }

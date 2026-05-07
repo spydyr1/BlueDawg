@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>BlueDawg</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <div id="screen-home" class="screen">
+    <header class="app-header">
+      <h1>BlueDawg</h1>
+      <button id="btn-new-project" class="btn-primary">+ New Project</button>
+    </header>
+    <div id="project-list"></div>
+  </div>
+
+  <div id="screen-editor" class="screen hidden">
+    <header class="app-header">
+      <button id="btn-back" class="btn-ghost">← Home</button>
+      <input id="project-name" type="text" value="New Project" class="project-name-input">
+      <div class="unit-toggle">
+        <button class="unit-btn active" data-unit="imperial">ft/in</button>
+        <button class="unit-btn" data-unit="metric">m/cm</button>
+      </div>
+    </header>
+
+    <div id="toolbar">
+      <button class="tool-btn active" data-tool="draw">✏ Draw</button>
+      <button class="tool-btn" data-tool="pan">✋ Pan</button>
+      <button class="tool-btn" id="btn-undo">↩ Undo</button>
+    </div>
+
+    <canvas id="main-canvas"></canvas>
+
+    <div id="status-bar">
+      <span id="status-area">Area: —</span>
+      <span id="status-perim">Perimeter: —</span>
+      <span id="status-hint">Click to place first corner</span>
+    </div>
+
+    <div id="pattern-bar">
+      <span class="label">Pattern:</span>
+      <button class="pattern-btn active" data-pattern="random">Random Rect</button>
+      <button class="pattern-btn" data-pattern="bond-h">Bond →</button>
+      <button class="pattern-btn" data-pattern="bond-v">Bond ↓</button>
+      <button id="btn-generate" class="btn-primary">Generate →</button>
+    </div>
+
+    <div id="results-panel" class="hidden">
+      <div id="material-table-container"></div>
+      <div id="cut-notes-container"></div>
+      <div id="results-actions">
+        <button id="btn-regenerate" class="btn-ghost">↻ Regenerate</button>
+        <button id="btn-save" class="btn-ghost">💾 Save</button>
+        <button id="btn-export-json" class="btn-ghost">⬇ Export JSON</button>
+        <button id="btn-print" class="btn-primary">🖨 Print / PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dim-input-overlay" class="hidden">
+    <input id="dim-input" type="text" placeholder='e.g. 12&apos; 6 3/4"' autocomplete="off">
+    <span id="dim-input-hint"></span>
+  </div>
+
+  <div id="fillet-overlay" class="hidden">
+    <label>Corner radius:</label>
+    <input id="fillet-input" type="text" placeholder='e.g. 18"'>
+    <button id="fillet-confirm">Apply</button>
+    <button id="fillet-remove">Remove</button>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
