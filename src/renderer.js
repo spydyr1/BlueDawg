@@ -160,7 +160,72 @@ export class Renderer {
     ctx.stroke();
   }
 
-  // drawLayout is added in Task 7
+  drawLayout(layout, polygon) {
+    const ctx = this.ctx;
+    const stoneColors = ['#c8b89a','#d4c4a8','#bfaf97','#ccc0a4','#b8a890'];
+
+    layout.stones.forEach((stone, i) => {
+      const color = stoneColors[i % stoneColors.length];
+
+      if (stone.clipped && stone.clipPath) {
+        ctx.beginPath();
+        stone.clipPath.forEach((pt, j) => {
+          const p = this.toCanvas(pt.x, pt.y);
+          j === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+        });
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#6b5d4f';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        this._drawCutIndicator(stone);
+      } else {
+        const cp = this.toCanvas(stone.x, stone.y);
+        const cw = stone.w * this.scale, ch = stone.h * this.scale;
+        ctx.fillStyle = color;
+        ctx.fillRect(cp.x, cp.y, cw, ch);
+        ctx.strokeStyle = '#6b5d4f';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(cp.x, cp.y, cw, ch);
+      }
+    });
+
+    // Draw patio boundary on top
+    ctx.save();
+    ctx.strokeStyle = '#4a6fa5';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    this._buildPolygonPath(polygon.vertices, polygon.fillets, true);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  _drawCutIndicator(stone) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.setLineDash([4, 3]);
+    ctx.strokeStyle = '#e74c3c';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    stone.clipPath.forEach((pt, j) => {
+      const p = this.toCanvas(pt.x, pt.y);
+      j === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    });
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    const midX = stone.clipPath.reduce((s, p) => s + p.x, 0) / stone.clipPath.length;
+    const midY = stone.clipPath.reduce((s, p) => s + p.y, 0) / stone.clipPath.length;
+    const cm = this.toCanvas(midX, midY);
+    ctx.fillStyle = '#e74c3c';
+    ctx.font = `${Math.max(8, this.scale * 1.5)}px system-ui`;
+    ctx.textAlign = 'center';
+    ctx.fillText('cut', cm.x, cm.y);
+    ctx.textAlign = 'left';
+  }
 }
 
 function _isClockwise(prev, cur, next) {
