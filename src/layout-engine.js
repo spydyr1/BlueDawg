@@ -1,5 +1,5 @@
 // src/layout-engine.js
-import { polygonArea, clipPolygonToPolygon, pointInPolygon } from './geometry.js';
+import { polygonArea, clipPolygonToPolygon } from './geometry.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -338,6 +338,21 @@ export function generateLayout(polygon, pattern) {
 
 // ─── Pattern implementations ──────────────────────────────────────────────────
 
+/**
+ * Ensure vertices are clockwise in canvas (Y-down) coordinates, which is what
+ * clipPolygonToPolygon requires.  If the signed shoelace area is negative the
+ * polygon is CCW and we reverse it.
+ */
+function ensureClockwise(vertices) {
+  let area = 0;
+  const n = vertices.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    area += vertices[i].x * vertices[j].y - vertices[j].x * vertices[i].y;
+  }
+  return area < 0 ? [...vertices].reverse() : vertices;
+}
+
 function _bbox(vertices) {
   const xs = vertices.map(v => v.x);
   const ys = vertices.map(v => v.y);
@@ -348,7 +363,7 @@ function _bbox(vertices) {
 }
 
 function _generateRandom(polygon) {
-  const { vertices } = polygon;
+  const vertices = ensureClockwise(polygon.vertices);
   const { minX, maxX, minY, maxY } = _bbox(vertices);
 
   const stones = [];
@@ -372,7 +387,7 @@ function _generateRandom(polygon) {
 }
 
 function _generateBond(polygon) {
-  const { vertices } = polygon;
+  const vertices = ensureClockwise(polygon.vertices);
   const { minX, maxX, minY, maxY } = _bbox(vertices);
 
   const stones = [];
