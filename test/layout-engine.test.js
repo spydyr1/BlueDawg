@@ -67,6 +67,17 @@ test('checkNoFourCorners: empty placed list always passes', () => {
   assert.ok(checkNoFourCorners([], { x: 0, y: 0, w: 18, h: 12 }));
 });
 
+test('checkNoFourCorners: detects 4-corner violation across joint gaps', () => {
+  // 4 stones in a 2×2 grid with 0.25" joints — corners are 0.25" apart, not exact
+  const placed = [
+    { x: 0,     y: 0,     w: 18, h: 18 }, // bottom-right at (18, 18)
+    { x: 18.25, y: 0,     w: 18, h: 18 }, // bottom-left  at (18.25, 18)
+    { x: 0,     y: 18.25, w: 18, h: 18 }, // top-right    at (18, 18.25)
+  ];
+  const candidate = { x: 18.25, y: 18.25, w: 18, h: 18 }; // top-left at (18.25, 18.25)
+  assert.ok(!checkNoFourCorners(placed, candidate));
+});
+
 // ─── checkSeamLength ─────────────────────────────────────────────────────────
 
 test('checkSeamLength: detects horizontal seam > 60"', () => {

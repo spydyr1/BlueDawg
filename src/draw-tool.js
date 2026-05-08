@@ -91,6 +91,19 @@ export function initEditor(proj) {
     document.getElementById('fillet-confirm').onclick = applyFillet;
     document.getElementById('fillet-remove').onclick = removeFillet;
     filletInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyFillet(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        if (drawing) {
+          drawing = false;
+          rubberPt = null;
+          _snapLabel = null;
+          dimOverlay.classList.add('hidden');
+          render();
+          updateStatus();
+        }
+        filletOverlay.classList.add('hidden');
+      }
+    });
     _listenersAttached = true;
   }
 

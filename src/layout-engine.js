@@ -1,5 +1,5 @@
 // src/layout-engine.js
-import { polygonArea, clipPolygonToPolygon } from './geometry.js';
+import { polygonArea, clipPolygonToPolygon, pointInPolygon } from './geometry.js';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -94,8 +94,9 @@ export function checkNoFourCorners(placed, candidate) {
   for (const pt of candCorners) {
     // How many placed stones share this corner point?
     let sharedCount = 0;
+    const TOL = JOINT + 0.1; // corners within a joint-width count as the same junction
     for (const s of placed) {
-      if (corners(s).some(c => Math.abs(c.x - pt.x) < 0.01 && Math.abs(c.y - pt.y) < 0.01)) {
+      if (corners(s).some(c => Math.abs(c.x - pt.x) < TOL && Math.abs(c.y - pt.y) < TOL)) {
         sharedCount++;
       }
     }
@@ -244,47 +245,73 @@ function isValidPlacement(placed, candidate, counts, totalCount, lastKey) {
 
 /**
  * Fill one horizontal row of the layout.
+ * Uses three passes to ensure complete coverage:
+ *   1. Full rules — prefer quality placements
+ *   2. Relaxed rules — drop seam/corner checks, keep no-adjacent-same-size
+ *   3. Force-place — ignore all rules, just fill the gap
+ * Only advances without placing when the position is truly outside the boundary.
+ *
  * Returns the updated totalCount.
  */
 function fillRow(y, rowH, minX, maxX, placed, stones, counts, totalCount, boundary) {
   const lengths = lengthsForHeight(rowH);
+  const sortedLens = [...lengths].sort((a, b) => a - b); // smallest first for fallback
   let x = minX;
   let lastKey = null;
-  let stalls = 0;
 
   while (x < maxX) {
-    const shuffled = shuffle(lengths);
     let placed_stone = false;
 
-    for (const len of shuffled) {
+    // Pass 1 — all rules
+    for (const len of shuffle(lengths)) {
       const candidate = { x, y, w: len, h: rowH };
+      if (!isValidPlacement(placed, candidate, counts, totalCount, lastKey)) continue;
+      const result = clipStone(candidate, boundary);
+      if (!result) continue;
+      const key = sizeKey(len, rowH);
+      stones.push(result); placed.push(candidate);
+      counts[key] = (counts[key] || 0) + 1;
+      totalCount++; lastKey = key;
+      x += len + JOINT;
+      placed_stone = true;
+      break;
+    }
 
-      // Quick check: stone must at least partially overlap the bounding box
-      if (x + len <= minX) continue;
-
-      if (isValidPlacement(placed, candidate, counts, totalCount, lastKey)) {
+    // Pass 2 — relax seam/corner rules, keep no-adjacent-same-size
+    if (!placed_stone) {
+      for (const len of shuffle(lengths)) {
+        const candidate = { x, y, w: len, h: rowH };
+        const key = sizeKey(len, rowH);
+        if (key === lastKey) continue;
         const result = clipStone(candidate, boundary);
-        if (result) {
-          stones.push(result);
-          placed.push(candidate);
-          const key = sizeKey(len, rowH);
-          counts[key] = (counts[key] || 0) + 1;
-          totalCount++;
-          lastKey = key;
-          x += len + JOINT;
-          placed_stone = true;
-          stalls = 0;
-          break;
-        }
+        if (!result) continue;
+        stones.push(result); placed.push(candidate);
+        counts[key] = (counts[key] || 0) + 1;
+        totalCount++; lastKey = key;
+        x += len + JOINT;
+        placed_stone = true;
+        break;
       }
     }
 
+    // Pass 3 — force-place: use smallest stone that overlaps boundary at all
     if (!placed_stone) {
-      // Try smallest possible stone to advance; if still stuck, skip a unit
-      x += (lengths[0] || 12) + JOINT;
-      stalls++;
-      if (stalls > 20) break; // safety valve against infinite loop
+      for (const len of sortedLens) {
+        const candidate = { x, y, w: len, h: rowH };
+        const result = clipStone(candidate, boundary);
+        if (!result) continue;
+        const key = sizeKey(len, rowH);
+        stones.push(result); placed.push(candidate);
+        counts[key] = (counts[key] || 0) + 1;
+        totalCount++; lastKey = key;
+        x += len + JOINT;
+        placed_stone = true;
+        break;
+      }
     }
+
+    // Nothing clips at this position — outside boundary, advance
+    if (!placed_stone) x += sortedLens[0] + JOINT;
   }
 
   return totalCount;

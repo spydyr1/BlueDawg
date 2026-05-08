@@ -1,4 +1,4 @@
-const CACHE = 'bluedawg-v4';
+const CACHE = 'bluedawg-v5';
 const ASSETS = ['/', '/index.html', '/css/app.css', '/css/print.css',
   '/src/main.js', '/src/imperial.js', '/src/geometry.js', '/src/draw-tool.js',
   '/src/renderer.js', '/src/layout-engine.js', '/src/boundary-clip.js',
