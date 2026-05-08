@@ -9,9 +9,15 @@ import { renderMaterialList } from './material-list.js';
 
 const SNAP_DIST_PX = 12; // pixels for snap-to-first-point
 
+// Angle snapping — snap to these degree values when within SNAP_ANGLE_THRESHOLD
+const SNAP_ANGLES_DEG = [0, 30, 45, 60, 90, 120, 135, 150, 180, 210, 225, 240, 270, 300, 315, 330];
+const SNAP_ANGLE_THRESHOLD = 8; // degrees
+
 let renderer, project, tool = 'draw';
 let drawing = false;
 let rubberPt = null;
+let _snapLabel = null;
+let _vertexSnap = false; // true when rubberPt is snapped to an existing vertex
 let dragAnchor = null, panStart = null;
 let hoveredVertex = -1;
 
@@ -126,6 +132,28 @@ function findNearestVertex(canvasPt) {
   return -1;
 }
 
+function applyAngleSnap(rawPt, fromPt) {
+  const dx = rawPt.x - fromPt.x;
+  const dy = rawPt.y - fromPt.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 0.5) { _snapLabel = null; return rawPt; }
+
+  const angleDeg = ((Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 360;
+  let nearest = null, minDiff = SNAP_ANGLE_THRESHOLD;
+  for (const a of SNAP_ANGLES_DEG) {
+    const diff = Math.abs(((angleDeg - a + 180) % 360) - 180);
+    if (diff < minDiff) { minDiff = diff; nearest = a; }
+  }
+
+  if (nearest === null) { _snapLabel = null; return rawPt; }
+
+  const snapRad = nearest * Math.PI / 180;
+  // Display as 0-180 (direction-agnostic) for compactness
+  const display = nearest <= 180 ? nearest : 360 - nearest;
+  _snapLabel = `${display}°`;
+  return { x: fromPt.x + Math.cos(snapRad) * len, y: fromPt.y + Math.sin(snapRad) * len };
+}
+
 function onMouseDown(e) {
   const cp = getCanvasPoint(e);
   if (tool === 'pan') { dragAnchor = cp; panStart = { ...renderer.pan }; return; }
@@ -151,9 +179,17 @@ function onMouseDown(e) {
   if (!drawing) drawing = true;
 
   if (poly.vertices.length > 0) {
+    // If snapped to an existing vertex, place it immediately (no dim input)
+    if (_vertexSnap && rubberPt) {
+      poly.vertices.push({ x: rubberPt.x, y: rubberPt.y });
+      render();
+      updateStatus();
+      return;
+    }
     const prev = poly.vertices[poly.vertices.length - 1];
-    const world = renderer.toWorld(cp.x, cp.y);
-    const angle = Math.atan2(world.y - prev.y, world.x - prev.x);
+    // Use snapped rubberPt angle if available (angle snap already applied in onMouseMove)
+    const ref = rubberPt || renderer.toWorld(cp.x, cp.y);
+    const angle = Math.atan2(ref.y - prev.y, ref.x - prev.x);
     showDimInput(prev, angle);
   } else {
     poly.vertices.push(renderer.toWorld(cp.x, cp.y));
@@ -170,8 +206,31 @@ function onMouseMove(e) {
     render();
     return;
   }
-  rubberPt = renderer.toWorld(cp.x, cp.y);
+  let worldPt = renderer.toWorld(cp.x, cp.y);
+  _snapLabel = null;
+  _vertexSnap = false;
   hoveredVertex = findNearestVertex(cp);
+
+  if (drawing) {
+    const verts = project.polygon.vertices;
+    // Snap to any existing vertex (endpoint snap)
+    for (let i = 0; i < verts.length; i++) {
+      const vc = renderer.toCanvas(verts[i].x, verts[i].y);
+      if (dist(cp, vc) < SNAP_DIST_PX) {
+        worldPt = { x: verts[i].x, y: verts[i].y };
+        _snapLabel = i === 0 && verts.length >= 3 ? 'close' : 'node';
+        _vertexSnap = true;
+        hoveredVertex = i;
+        break;
+      }
+    }
+    // Only apply angle snap if not already snapped to a vertex
+    if (!_vertexSnap && verts.length > 0) {
+      worldPt = applyAngleSnap(worldPt, verts[verts.length - 1]);
+    }
+  }
+
+  rubberPt = worldPt;
   render();
 }
 
@@ -193,7 +252,7 @@ function showDimInput(prev, angle) {
   _pendingAngle = angle;
   dimOverlay.classList.remove('hidden');
   dimInput.value = '';
-  dimInput.focus();
+  setTimeout(() => dimInput.focus(), 0);
   dimHint.textContent = 'e.g. 12\' 6 3/4"  then Enter';
 
   dimInput.onkeydown = e => {
@@ -264,7 +323,7 @@ function removeFillet() {
 
 function render() {
   renderer.clear();
-  renderer.drawPolygon(project.polygon, drawing ? rubberPt : null);
+  renderer.drawPolygon(project.polygon, drawing ? rubberPt : null, drawing ? _snapLabel : null);
   if (project.layout && renderer.drawLayout) {
     renderer.drawLayout(project.layout, project.polygon);
   }

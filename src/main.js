@@ -18,11 +18,14 @@ export function showScreen(name) {
 
 export function openEditor(projectId) {
   const project = store.load(projectId);
+  showScreen('editor'); // show first so canvas has layout dimensions
   initEditor(project);
-  showScreen('editor');
 }
 
 export function goHome() {
+  // Hide any editor overlays before leaving
+  document.getElementById('dim-input-overlay').classList.add('hidden');
+  document.getElementById('fillet-overlay').classList.add('hidden');
   showScreen('home');
   renderHome(openEditor);
 }

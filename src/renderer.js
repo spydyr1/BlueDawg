@@ -13,8 +13,11 @@ export class Renderer {
   }
 
   _resize() {
-    this.canvas.width = this.canvas.clientWidth * devicePixelRatio;
-    this.canvas.height = this.canvas.clientHeight * devicePixelRatio;
+    const w = Math.round(this.canvas.clientWidth * devicePixelRatio);
+    const h = Math.round(this.canvas.clientHeight * devicePixelRatio);
+    if (!w || !h || (w === this.canvas.width && h === this.canvas.height)) return;
+    this.canvas.width = w;
+    this.canvas.height = h;
     this.ctx.scale(devicePixelRatio, devicePixelRatio);
   }
 
@@ -29,6 +32,7 @@ export class Renderer {
   }
 
   clear() {
+    this._resize(); // re-measure in case canvas was hidden at construction time
     const { width, height } = this.canvas;
     const ctx = this.ctx;
     ctx.fillStyle = '#1a1a2e';
@@ -51,7 +55,7 @@ export class Renderer {
     }
   }
 
-  drawPolygon(polygon, rubberPt = null) {
+  drawPolygon(polygon, rubberPt = null, snapLabel = null) {
     const ctx = this.ctx;
     const { vertices, fillets } = polygon;
     if (!vertices.length) return;
@@ -64,22 +68,50 @@ export class Renderer {
       ctx.fillStyle = 'rgba(176,196,222,0.12)';
       ctx.fill();
     }
-    ctx.strokeStyle = '#4a6fa5';
+    ctx.strokeStyle = '#7fb3e0';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Rubber-band line to cursor
+    // Rubber-band line + cursor indicator
     if (rubberPt && vertices.length > 0) {
       const last = this.toCanvas(vertices[vertices.length - 1].x, vertices[vertices.length - 1].y);
       const cur = this.toCanvas(rubberPt.x, rubberPt.y);
-      ctx.setLineDash([5, 3]);
-      ctx.strokeStyle = '#e74c3c';
+
+      // White line from last vertex to cursor
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(last.x, last.y);
       ctx.lineTo(cur.x, cur.y);
       ctx.stroke();
-      ctx.setLineDash([]);
+
+      // Cursor crosshair
+      const cs = 7;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cur.x - cs, cur.y); ctx.lineTo(cur.x + cs, cur.y);
+      ctx.moveTo(cur.x, cur.y - cs); ctx.lineTo(cur.x, cur.y + cs);
+      ctx.stroke();
+
+      // Distance + snap label near cursor
+      const prev = vertices[vertices.length - 1];
+      const d = Math.hypot(rubberPt.x - prev.x, rubberPt.y - prev.y);
+      const label = d > 0.5
+        ? (snapLabel ? `${formatIn(d)}  ${snapLabel} ⊾` : formatIn(d))
+        : '';
+      if (label) {
+        ctx.save();
+        ctx.font = 'bold 11px system-ui';
+        const tw = ctx.measureText(label).width;
+        const tx = cur.x + 14, ty = cur.y - 8;
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(tx - 3, ty - 12, tw + 6, 16);
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        ctx.fillText(label, tx, ty);
+        ctx.restore();
+      }
     }
 
     // Corner dots and fillet arc labels
@@ -87,13 +119,13 @@ export class Renderer {
       const cp = this.toCanvas(v.x, v.y);
       const hasFillet = fillets[i] !== undefined;
       ctx.beginPath();
-      ctx.arc(cp.x, cp.y, hasFillet ? 5 : 4, 0, Math.PI * 2);
-      ctx.fillStyle = hasFillet ? '#f39c12' : '#4a6fa5';
+      ctx.arc(cp.x, cp.y, hasFillet ? 6 : 5, 0, Math.PI * 2);
+      ctx.fillStyle = hasFillet ? '#f39c12' : '#ffffff';
       ctx.fill();
       if (hasFillet) {
         ctx.fillStyle = '#f39c12';
         ctx.font = '9px system-ui';
-        ctx.fillText(`r=${formatIn(fillets[i])}`, cp.x + 7, cp.y - 5);
+        ctx.fillText(`r=${formatIn(fillets[i])}`, cp.x + 8, cp.y - 6);
       }
     });
 

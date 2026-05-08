@@ -1,4 +1,4 @@
-const CACHE = 'bluedawg-v2';
+const CACHE = 'bluedawg-v4';
 const ASSETS = ['/', '/index.html', '/css/app.css', '/css/print.css',
   '/src/main.js', '/src/imperial.js', '/src/geometry.js', '/src/draw-tool.js',
   '/src/renderer.js', '/src/layout-engine.js', '/src/boundary-clip.js',
@@ -19,5 +19,5 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => e.respondWith(
-  caches.match(e.request).then(r => r || fetch(e.request))
+  fetch(e.request).catch(() => caches.match(e.request))
 ));

@@ -4,6 +4,17 @@ import { polygonArea } from './geometry.js';
 
 export function renderHome(onOpen) {
   const list = document.getElementById('project-list');
+
+  // Debug banner
+  let debugEl = document.getElementById('debug-banner');
+  if (!debugEl) {
+    debugEl = document.createElement('p');
+    debugEl.id = 'debug-banner';
+    debugEl.style.cssText = 'color:#f39c12;padding:4px 16px;font-size:11px;margin:0';
+    debugEl.textContent = 'hi jay bird!';
+    list.parentElement.insertBefore(debugEl, list);
+  }
+
   const projects = store.list();
 
   if (!projects.length) {
